@@ -100,6 +100,12 @@ export default function App() {
     try {
       const priceId = plan === 'monthly' ? import.meta.env.VITE_MONTHLY_PRICE_ID : import.meta.env.VITE_YEARLY_PRICE_ID;
       
+      console.log(`Upgrading to ${plan} plan with priceId:`, priceId);
+
+      if (!priceId) {
+        throw new Error(`Price ID for ${plan} plan is not defined in environment variables.`);
+      }
+      
       const res = await fetch("/api/stripe/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,13 +116,20 @@ export default function App() {
         }),
       });
 
-      const { url } = await res.json();
-      if (url) {
-        window.location.href = url;
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create checkout session");
       }
-    } catch (error) {
-      console.error(error);
-      alert("Checkout failed. Please try again.");
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned from server");
+      }
+    } catch (error: any) {
+      console.error("Upgrade error:", error);
+      alert(`Checkout failed: ${error.message}`);
     }
   };
 
