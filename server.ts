@@ -14,7 +14,7 @@ if (!process.env.GEMINI_API_KEY) {
   console.error("WARNING: GEMINI_API_KEY is not defined in environment variables.");
 }
 
-const ai = new GoogleGenAI(process.env.GEMINI_API_KEY || "");
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 async function startServer() {
   const app = express();
@@ -139,12 +139,19 @@ async function startServer() {
 
   // API: Create Stripe Checkout Session
   app.post("/api/stripe/create-checkout", async (req, res) => {
-    const { priceId, successUrl, cancelUrl } = req.body;
+    const { plan, successUrl, cancelUrl } = req.body;
 
-    console.log(`Creating checkout session for priceId: ${priceId}`);
+    let priceId = "";
+    if (plan === "monthly") {
+      priceId = process.env.MONTHLY_PRICE_ID || "";
+    } else if (plan === "yearly") {
+      priceId = process.env.YEARLY_PRICE_ID || "";
+    }
+
+    console.log(`Creating checkout session for plan: ${plan}, priceId: ${priceId}`);
 
     if (!priceId) {
-      return res.status(400).json({ error: "Missing priceId. Please check your environment variables." });
+      return res.status(400).json({ error: `Price ID for ${plan} plan is not defined in environment variables.` });
     }
 
     try {

@@ -98,19 +98,13 @@ export default function App() {
 
   const handleUpgrade = async (plan: 'monthly' | 'yearly') => {
     try {
-      const priceId = plan === 'monthly' ? import.meta.env.VITE_MONTHLY_PRICE_ID : import.meta.env.VITE_YEARLY_PRICE_ID;
-      
-      console.log(`Upgrading to ${plan} plan with priceId:`, priceId);
-
-      if (!priceId) {
-        throw new Error(`Price ID for ${plan} plan is not defined in environment variables.`);
-      }
+      console.log(`Upgrading to ${plan} plan...`);
       
       const res = await fetch("/api/stripe/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          priceId,
+          plan,
           successUrl: window.location.origin + "?payment=success",
           cancelUrl: window.location.origin,
         }),
